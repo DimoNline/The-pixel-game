@@ -1,0 +1,167 @@
+//What's it? 
+#include<GL/freeglut.h>
+#include<conio.h>
+#include<iostream>
+#include<stdlib.h>
+#include<math.h>
+#include<ctime> 
+#include<GL\GLStd.h>
+using namespace std;
+const int Wid = 640;//Ширина
+const int Hei = 480;//Высота
+const int OWid = 150;
+const int OHei = 150;
+int lives = 12;
+int Plives = 7;
+int level;														
+GLfloat x = OWid / 5;
+GLfloat y = OHei / 2;
+GLfloat Px = OWid / 2; //random(Wid);
+GLfloat Py = OHei / 2;// random(Hei);
+/*inline void clear() 
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+inline void glTextOut(GLfloat x, GLfloat y, std::string text)
+{
+	glRasterPos2f(x, y);
+	glutBitmapString(GLUT_BITMAP_9_BY_15, (const unsigned char*)text.c_str());
+}
+inline int random(int n)
+{
+	srand(time(NULL));
+	int i = rand() % n;
+	return i;
+}*/
+void help()
+{
+	clear();
+	glColor3f(1, 1, 1);
+	glTextOut(OWid - OWid / 1.5f, OHei - OHei / 5.0f, "Go Full Screen +\nLeave Full Screen -\nShooting Space\nUp ,Down, Left, Right - W,S,A,D");
+	glFinish();
+	Sleep(4500);
+}
+
+void Timer(int value)
+{
+	glutPostRedisplay();
+	glutTimerFunc(45, Timer, 0);
+}
+inline void shooting()
+{
+	Sleep(10);
+	glColor3f(0.2f, 1.0f, 0.0f);
+	glBegin(GL_LINES);
+	glVertex2f(x, y + 1);
+	glVertex2f(x, y + OHei / 7);
+	glEnd();
+	glFlush();
+	Sleep(88);
+	if (Py - y <= OHei / 7 && x == Px && Py >= y)
+	{
+		y -= (OHei / 30);
+		if (y <= 0){ y = OHei / 30; };
+		Plives--;
+		level += 0.1f;
+		if (Plives == 0)
+		{
+			clear();
+			glColor3f(0.1f, 1.0f, 0.0f);
+			glTextOut(OWid - OWid / 1.5f, OHei - OHei / 5.0f, "You WIN!");
+			glFinish();
+			Sleep(5000);
+			exit(0);
+		}
+	}
+}
+void Keyboard(unsigned char key, int po, int lo)
+{
+	switch (key)
+	{
+	case '+':glutFullScreen(); ShowCursor(FALSE); ShowCursor(FALSE);
+		glPointSize(6);
+		glLineWidth(4); break;
+	case '-':glutLeaveFullScreen(); ShowCursor(TRUE);
+		glPointSize(4);
+		glLineWidth(2);
+		break;
+	case 'w':y += 1; if (y >= OHei){ y = OHei - 1; }; break;
+	case 'd':x += 1; if (x >= OWid){ x = OWid - 1; }; break;
+	case 's':y -= 1; if (y <= 0){ y = 1; };  break;
+	case 'a':x -= 1; if (x <= 0){ x = 1; };  break;
+	case ' ': shooting(); break;
+	};
+}
+void Display()
+{
+	if (Py - y <= (OHei / 4) && Py >= y && Px == x)
+	{
+		Sleep(10);
+		glColor3f(0.9f, 0.5f, 0.0f);
+		//Выстрел
+		glBegin(GL_LINES);
+		glVertex2f(Px, Py - 1);
+		glVertex2f(Px, y);
+		glEnd();
+		glFlush();
+
+		lives--;
+		Sleep(95);
+		if (lives == 0){
+			clear();
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glTextOut(OWid - OWid / 1.5f, OHei - OHei / 5.0f, "You LOOOOOOSE!");
+			glFinish();
+			Sleep(3000);
+			exit(0);
+		}
+	}
+	clear();
+	if (x == Px && y == Py)
+	{
+		Px -= OWid / 10;
+		Py -= OHei / 10;
+		x += OWid / 15;
+		y += OHei / 15;
+		if (Py <= 0) { Py = 3; }
+		if (Px <= 0)  { Px = 3; }
+	};
+
+	if (random(2) == 1){ Px += random(3) - 1; }//Перемещение по x
+	else               { Py += random(3) - 1; }//перемещение по y
+	//Не выходит ли за окно?
+	if (Py <= 0) { Py = 3; }
+	else  if (Py >= OHei - 1)  { Py = OHei - 3; }
+	if (Px <= 0)  { Px = 3; }
+	else 	if (Px >= OWid - 1) { Px = OWid - 3; }
+	//cout << x << endl << Px <<endl<< y << endl << Py << endl;
+	glBegin(GL_POINTS);
+	glColor3f(1.0f, level, 0.2f);
+	glVertex2f(Px, Py);
+	glColor3f(1, 1, 1);
+	glVertex2f(x, y);
+	glEnd();
+	glFlush();
+}
+int main(int argc, char** argv)
+{
+	setlocale(LC_ALL, "RUS");
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
+	glutInitWindowPosition(300, 120);
+	glutInitWindowSize(Wid, Hei);
+	glutCreateWindow("The Pixel Game.");
+	glLoadIdentity();
+	glColor3f(0, 0, 0);
+	gluOrtho2D(0, OWid, 0, OHei);
+	glClearColor(0.0f, 0.0f, 0.1f, 0.0f);
+	glMatrixMode(GL_PROJECTION);
+	help();
+	glutDisplayFunc(Display);
+	glPointSize(4);
+	glLineWidth(2);
+	glutTimerFunc(5, Timer, 0);
+	glutKeyboardFunc(Keyboard);
+	glutMainLoop();
+	return 0;
+}
